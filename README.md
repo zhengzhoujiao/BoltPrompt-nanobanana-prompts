@@ -35,7 +35,9 @@ BoltPrompt 围绕下面几条打磨体验：
 
 ### ⚡️项目启动
 
-**启动服务**：在本目录打开终端，执行：
+**1、提示词数据集下载**：[点击下载提示词，并且解压到项目根目录](https://github.com/zhengzhoujiao/BoltPrompt-nanobanana-prompts/releases/tag/v1.0.0)
+
+**2、启动服务**：在本目录打开终端，执行：
 
 ```bash
 python server.py
