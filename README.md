@@ -9,7 +9,7 @@
 **BoltPrompt** 面向图像类 AI 创作，整理了 **八千余条精选提示词**：覆盖多种创作场景与风格，开箱即可在浏览器中浏览——**轻快、直观、不乱**。
 
 > 🔗 **立刻体验**：[https://bolt-series.cn/prompt/](https://bolt-series.cn/prompt/)  
-> ⚠️ **版权声明**：所有提示词均收集自社区，仅供教育目的使用。如果您认为任何内容侵犯了您的权利，请[提交 issue](https://github.com/zhengzhoujiao/BoltPrompt-nano-banana-prompts/issues/new?template=bug-report.yml)，我们将立即移除。
+> ⚠️ **版权声明**：所有提示词均收集自社区，仅供教育目的使用。如果您认为任何内容侵犯了您的权利，请[提交 issue](https://github.com/zhengzhoujiao/BoltPrompt-nanobanana-prompts/issues/new?template=bug-report.yml)，我们将立即移除。
 
 ---
 
@@ -91,7 +91,7 @@ python server.py
 
 ### 🐛 GitHub Issue
 
-1. Click [**提交新提示词**](https://github.com/zhengzhoujiao/BoltPrompt-nano-banana-prompts/issues/new?template=submit-prompt.yml)
+1. Click [**提交新提示词**](https://github.com/zhengzhoujiao/BoltPrompt-nanobanana-prompts/issues/new?template=submit-prompt.yml)
 2. 填写表单，包含提示词详情和图片
 3. 提交并等待团队审核
 4. 如果通过审核（我们会添加 `approved` 标签），它将自动同步到 CMS
