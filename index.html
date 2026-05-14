@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prompt 提示词库</title>
+<base href="/prompt/">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="apple-touch-icon" href="logo.png">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --sidebar-w: 240px;
+    --header-h: 60px;
+    --bg: #f5f6fa;
+    --surface: #ffffff;
+    --border: #e8eaed;
+    --primary: #4f6ef7;
+    --primary-light: #eef0fe;
+    --text: #1a1d23;
+    --text-sub: #6b7280;
+    --shadow: 0 2px 12px rgba(0,0,0,.06);
+    --shadow-hover: 0 6px 24px rgba(0,0,0,.10);
+    --radius: 12px;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  .header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    height: var(--header-h);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+    padding: 0 24px 0 calc(var(--sidebar-w) + 24px);
+    gap: 16px;
+  }
+  .header-logo {
+    position: absolute; left: 0; width: var(--sidebar-w);
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 20px;
+    font-size: 16px; font-weight: 700; color: var(--primary);
+    border-right: 1px solid var(--border); height: 100%;
+  }
+  .header-logo img {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    display: block;
+  }
+  .menu-btn {
+    display: none;
+    flex-shrink: 0; width: 36px; height: 36px;
+    border: none; background: none; cursor: pointer;
+    border-radius: 8px; color: var(--text);
+    align-items: center; justify-content: center;
+    transition: background .15s;
+  }
+  .menu-btn:hover { background: var(--bg); }
+  .search-wrap {
+    flex: 1; max-width: 560px;
+    position: relative;
+  }
+  .search-wrap svg {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    color: var(--text-sub); pointer-events: none;
+  }
+  .search-input {
+    width: 100%; height: 38px;
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 0 16px 0 40px;
+    font-size: 14px; color: var(--text);
+    background: var(--bg);
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .search-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79,110,247,.12);
+    background: #fff;
+  }
+  .search-input::placeholder { color: var(--text-sub); }
+  .count-badge {
+    font-size: 13px; color: var(--text-sub); white-space: nowrap;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    position: fixed; top: var(--header-h); left: 0; bottom: 0; z-index: 90;
+    width: var(--sidebar-w);
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 12px 0;
+  }
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .sidebar-section { padding: 8px 12px 4px; }
+  .sidebar-label {
+    font-size: 11px; font-weight: 600; letter-spacing: .06em;
+    color: var(--text-sub); text-transform: uppercase;
+    padding: 0 8px; margin-bottom: 4px;
+  }
+  .cat-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px; border-radius: 8px; cursor: pointer;
+    font-size: 13.5px; color: var(--text); gap: 8px;
+    transition: background .15s, color .15s;
+    user-select: none;
+  }
+  .cat-item:hover { background: var(--bg); }
+  .cat-item.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+  .cat-item-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cat-item-count {
+    flex-shrink: 0;
+    font-size: 11px; color: var(--text-sub);
+    background: var(--bg); border-radius: 10px;
+    padding: 1px 7px;
+  }
+  .cat-item.active .cat-item-count {
+    background: rgba(79,110,247,.15); color: var(--primary);
+  }
+
+  /* ── Main ── */
+  .main {
+    margin-left: var(--sidebar-w);
+    padding: calc(var(--header-h) + 24px) 28px 40px;
+    min-height: 100vh;
+  }
+
+  .section-title {
+    font-size: 18px; font-weight: 700; color: var(--text);
+    margin-bottom: 16px; padding-top: 8px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-title span { font-size: 13px; font-weight: 400; color: var(--text-sub); }
+
+  .section + .section { margin-top: 32px; }
+  .section {
+    content-visibility: auto;
+    contain-intrinsic-size: 0 600px;
+  }
+
+  /* ── Cards grid ── */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+  }
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: box-shadow .2s;
+    cursor: default;
+    contain: layout style;
+  }
+  .card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+  .card-img {
+    width: 100%; display: block;
+    background: var(--bg);
+    aspect-ratio: 1;
+    object-fit: cover;
+  }
+  .card-img-placeholder {
+    width: 100%; aspect-ratio: 1;
+    background: linear-gradient(135deg, #f0f2ff 0%, #e8ecfd 100%);
+    display: flex; align-items: center; justify-content: center;
+    color: #c5ccf0; font-size: 40px;
+  }
+  .card-body { padding: 14px 16px 16px; }
+  .card-title {
+    font-size: 14px; font-weight: 600; line-height: 1.45;
+    color: var(--text); margin-bottom: 6px;
+  }
+  .card-meta {
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 12px;
+  }
+  .card-author {
+    font-size: 12px; color: var(--text-sub);
+  }
+  .card-prompt-preview {
+    font-size: 12px; color: var(--text-sub); line-height: 1.55;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden; margin-bottom: 12px;
+  }
+  .btn-view {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 20px;
+    background: var(--primary-light); color: var(--primary);
+    font-size: 12.5px; font-weight: 600; border: none; cursor: pointer;
+    transition: background .15s, color .15s;
+  }
+  .btn-view:hover { background: var(--primary); color: #fff; }
+
+  /* ── Empty ── */
+  .empty {
+    text-align: center; padding: 80px 20px; color: var(--text-sub);
+  }
+  .empty svg { margin-bottom: 16px; opacity: .4; }
+  .empty p { font-size: 15px; }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0; z-index: 500;
+    background: rgba(15,20,40,.45);
+    backdrop-filter: blur(4px);
+    align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: 16px;
+    width: 100%; max-width: 680px;
+    max-height: 86vh;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    box-shadow: 0 24px 60px rgba(0,0,0,.18);
+    animation: modalIn .18s ease;
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(.95) translateY(8px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .modal-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    padding: 20px 24px 16px; border-bottom: 1px solid var(--border); gap: 16px;
+  }
+  .modal-title { font-size: 17px; font-weight: 700; line-height: 1.4; flex: 1; }
+  .modal-author { font-size: 12.5px; color: var(--text-sub); margin-top: 4px; }
+  .modal-close {
+    flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%;
+    border: none; cursor: pointer; background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-sub); transition: background .15s;
+  }
+  .modal-close:hover { background: var(--border); }
+  .modal-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
+  .modal-body::-webkit-scrollbar { width: 6px; }
+  .modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
+
+  .prompt-block { margin-bottom: 20px; }
+  .prompt-block-header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .prompt-block-actions {
+    display: flex; align-items: center; gap: 8px;
+    flex-shrink: 0;
+  }
+  .prompt-label {
+    font-size: 11px; font-weight: 700; letter-spacing: .08em;
+    color: var(--text-sub); text-transform: uppercase;
+  }
+  .prompt-text {
+    font-size: 14px; line-height: 1.8; color: var(--text);
+    background: var(--bg); border-radius: 10px;
+    padding: 14px 16px;
+    white-space: pre-wrap; word-break: break-word;
+    border: 1px solid var(--border);
+  }
+  .prompt-empty { color: var(--text-sub); font-style: italic; }
+  .copy-btn {
+    flex-shrink: 0;
+    padding: 4px 10px; border-radius: 6px; font-size: 11.5px;
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--text-sub); cursor: pointer; transition: all .15s;
+  }
+  .copy-btn:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .copy-btn.copied { background: #22c55e; color: #fff; border-color: #22c55e; }
+  .try-btn {
+    flex-shrink: 0;
+    padding: 4px 10px; border-radius: 6px; font-size: 11.5px;
+    border: 1px solid var(--primary); background: var(--primary-light);
+    color: var(--primary); cursor: pointer; transition: all .15s;
+  }
+  .try-btn:hover { background: var(--primary); color: #fff; }
+  .try-btn.done { background: #22c55e; color: #fff; border-color: #22c55e; }
+
+  .modal-img-wrap { margin-bottom: 20px; }
+  .modal-img { width: 100%; border-radius: 10px; display: block; }
+
+  /* ── 侧边栏遮罩 ── */
+  .sidebar-mask {
+    display: none;
+    position: fixed; inset: 0; z-index: 89;
+    background: rgba(0,0,0,.4);
+  }
+  .sidebar-mask.open { display: block; }
+
+  /* ── 轻提示弹层（替代 alert） ── */
+  .alert-dialog-overlay {
+    display: none;
+    position: fixed; inset: 0; z-index: 600;
+    background: rgba(15,20,40,.45);
+    backdrop-filter: blur(3px);
+    align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .alert-dialog-overlay.open { display: flex; }
+  .alert-dialog-sheet {
+    background: var(--surface);
+    border-radius: 16px;
+    width: 100%; max-width: 400px;
+    border: 1px solid var(--border);
+    box-shadow: 0 24px 60px rgba(0,0,0,.18);
+    overflow: hidden;
+  }
+  .alert-dialog-hd {
+    padding: 18px 22px 12px;
+    font-size: 16px; font-weight: 700;
+    color: var(--text);
+  }
+  .alert-dialog-bd {
+    padding: 0 22px 18px;
+    font-size: 14px; line-height: 1.55;
+    color: var(--text);
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .alert-dialog-ft {
+    padding: 12px 22px 18px;
+    display: flex; justify-content: flex-end;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+  }
+  .alert-dialog-ok {
+    padding: 8px 20px; border-radius: 10px; font-size: 13px; font-weight: 600;
+    border: none; cursor: pointer;
+    background: var(--primary); color: #fff;
+    transition: opacity .15s;
+  }
+  .alert-dialog-ok:hover { opacity: .92; }
+
+  /* ── 移动端适配 ── */
+  @media (max-width: 768px) {
+    .header {
+      padding: 0 16px;
+      gap: 10px;
+    }
+    .header-logo { display: none; }
+    .menu-btn { display: flex; }
+    .count-badge { display: none; }
+
+    .sidebar {
+      transform: translateX(-100%);
+      transition: transform .25s ease;
+      z-index: 200;
+    }
+    .sidebar.open { transform: translateX(0); }
+
+    .main {
+      margin-left: 0;
+      padding: calc(var(--header-h) + 16px) 12px 32px;
+    }
+
+    .cards {
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+    }
+
+    .section-title { font-size: 15px; }
+
+    .modal-overlay { padding: 0; align-items: flex-end; }
+    .modal {
+      border-radius: 16px 16px 0 0;
+      max-height: 92vh;
+    }
+    .prompt-block-header { flex-wrap: wrap; }
+    .prompt-block-actions { margin-left: auto; }
+  }
+
+  @media (max-width: 400px) {
+    .cards { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .card-body { padding: 10px 12px 12px; }
+    .card-title { font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-logo">
+    <img src="logo.png" width="22" height="22" alt="BoltPrompt" decoding="async">
+   BoltPrompt 提示词库
+  </div>
+  <button class="menu-btn" id="menuBtn" aria-label="菜单">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+  <div class="search-wrap">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input class="search-input" id="searchInput" type="text" placeholder="搜索提示词标题或内容…">
+  </div>
+  <span class="count-badge" id="countBadge"></span>
+</header>
+
+<!-- Sidebar mask -->
+<div class="sidebar-mask" id="sidebarMask"></div>
+<!-- Sidebar -->
+<nav class="sidebar" id="sidebar"></nav>
+
+<!-- Main -->
+<main class="main" id="main"></main>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modalTitle"></div>
+        <div class="modal-author" id="modalAuthor"></div>
+      </div>
+      <button class="modal-close" id="modalClose">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- 提示弹层 -->
+<div class="alert-dialog-overlay" id="alertDialogOverlay" aria-hidden="true">
+  <div class="alert-dialog-sheet" role="alertdialog" aria-modal="true" aria-labelledby="alertDialogTitle" aria-describedby="alertDialogMsg">
+    <div class="alert-dialog-hd" id="alertDialogTitle">提示</div>
+    <div class="alert-dialog-bd" id="alertDialogMsg"></div>
+    <div class="alert-dialog-ft">
+      <button type="button" class="alert-dialog-ok" id="alertDialogOk">知道了</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let allData = [];
+let searchQuery = '';
+let activeCat = '__all__';
+
+/** 「复制并尝试」跳转基础地址（完整 URL），将追加 ?prompt= 编码后的正文；请按需修改 */
+const TRY_PROMPT_BASE_URL = 'https://bolt-series.com/boltPaint/#/tools/advanced-creation';
+
+/** README / 外链分类直达：?cat=分类原始 name（与 JSON 中一致），或 hash 形如 #cat=… */
+const URL_CAT_PARAM = 'cat';
+
+function parseCategoryFromUrl() {
+  const params = new URLSearchParams(location.search);
+  let raw = params.get(URL_CAT_PARAM);
+  if (raw) return raw.trim();
+  const h = location.hash;
+  if (!h || h.length < 6) return null;
+  const idx = h.indexOf('cat=');
+  if (idx < 0) return null;
+  let rest = h.slice(idx + 4);
+  const cut = rest.indexOf('&');
+  if (cut >= 0) rest = rest.slice(0, cut);
+  try {
+    return decodeURIComponent(rest.replace(/\+/g, ' ')).trim();
+  } catch (e) {
+    return rest.trim();
+  }
+}
+
+function applyCategoryFromUrlString(want, scrollAfter) {
+  if (!want) return;
+  if (want === '__all__' || String(want).toLowerCase() === 'all') {
+    activeCat = '__all__';
+    return;
+  }
+  if (allData.some(c => c.name === want)) {
+    activeCat = want;
+    if (scrollAfter) {
+      requestAnimationFrame(() => {
+        const el = document.getElementById('cat-' + want);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+  }
+}
+
+function syncCategoryToUrl() {
+  const u = new URL(location.href);
+  if (activeCat === '__all__') u.searchParams.delete(URL_CAT_PARAM);
+  else u.searchParams.set(URL_CAT_PARAM, activeCat);
+  const qs = u.searchParams.toString();
+  const href = u.pathname + (qs ? '?' + qs : '');
+  history.replaceState(null, '', href);
+}
+
+function showAlert(message, title = '提示') {
+  const ov = document.getElementById('alertDialogOverlay');
+  document.getElementById('alertDialogTitle').textContent = title;
+  document.getElementById('alertDialogMsg').textContent = message;
+  ov.classList.add('open');
+  ov.setAttribute('aria-hidden', 'false');
+  document.getElementById('alertDialogOk').focus();
+}
+
+function closeAlert() {
+  const ov = document.getElementById('alertDialogOverlay');
+  ov.classList.remove('open');
+  ov.setAttribute('aria-hidden', 'true');
+}
+
+document.getElementById('alertDialogOk').addEventListener('click', closeAlert);
+document.getElementById('alertDialogOverlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeAlert();
+});
+
+// ── Fetch data ──
+async function loadData() {
+  const urlCatWant = parseCategoryFromUrl();
+  const res = await fetch('api/data');
+  allData = await res.json();
+  applyCategoryFromUrlString(urlCatWant, !!urlCatWant);
+  renderSidebar();
+  renderMain();
+  syncCategoryToUrl();
+}
+
+// ── Image URL helper ──
+function imgUrl(localPath) {
+  return `image?path=${encodeURIComponent(localPath)}`;
+}
+
+// ── Sidebar ──
+function renderSidebar() {
+  const total = allData.reduce((s, c) => s + c.projects.length, 0);
+  let html = `
+    <div class="sidebar-section">
+      <div class="sidebar-label">分类</div>
+      <div class="cat-item ${activeCat === '__all__' ? 'active' : ''}" data-cat="__all__">
+        <span class="cat-item-name">全部</span>
+        <span class="cat-item-count">${total}</span>
+      </div>
+    </div>
+    <div class="sidebar-section">`;
+  allData.forEach(cat => {
+    const isActive = activeCat === cat.name;
+    // strip leading number prefix for display
+    const displayName = cat.name.replace(/^\d+_/, '');
+    html += `
+      <div class="cat-item ${isActive ? 'active' : ''}" data-cat="${escHtml(cat.name)}">
+        <span class="cat-item-name">${escHtml(displayName)}</span>
+        <span class="cat-item-count">${cat.projects.length}</span>
+      </div>`;
+  });
+  html += `</div>`;
+  document.getElementById('sidebar').innerHTML = html;
+
+  document.querySelectorAll('.cat-item').forEach(el => {
+    el.addEventListener('click', () => {
+      activeCat = el.dataset.cat;
+      renderSidebar();
+      renderMain();
+      syncCategoryToUrl();
+    });
+  });
+}
+
+// ── Filter logic ──
+function getFiltered() {
+  const q = searchQuery.trim().toLowerCase();
+  let cats = activeCat === '__all__' ? allData : allData.filter(c => c.name === activeCat);
+  if (!q) return cats.map(c => ({ ...c }));
+  return cats.map(c => ({
+    ...c,
+    projects: c.projects.filter(p =>
+      (p.title || '').toLowerCase().includes(q) ||
+      (p.prompt_origin || '').toLowerCase().includes(q) ||
+      (p.prompt_cn || '').toLowerCase().includes(q) ||
+      (p.author || '').toLowerCase().includes(q)
+    )
+  })).filter(c => c.projects.length > 0);
+}
+
+// ── Main content ──
+function renderMain() {
+  const filtered = getFiltered();
+  const total = filtered.reduce((s, c) => s + c.projects.length, 0);
+
+  document.getElementById('countBadge').textContent = `共 ${total} 个提示词`;
+
+  const main = document.getElementById('main');
+
+  if (total === 0) {
+    main.innerHTML = `
+      <div class="empty">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <p>没有找到匹配的提示词</p>
+      </div>`;
+    return;
+  }
+
+  let html = '';
+  filtered.forEach(cat => {
+    if (!cat.projects.length) return;
+    const displayName = cat.name.replace(/^\d+_/, '');
+    html += `
+      <div class="section" id="cat-${escAttr(cat.name)}">
+        <div class="section-title">${escHtml(displayName)} <span>${cat.projects.length} 个</span></div>
+        <div class="cards">
+          ${cat.projects.map(p => cardHtml(p)).join('')}
+        </div>
+      </div>`;
+  });
+  main.innerHTML = html;
+
+  // bind view buttons
+  main.querySelectorAll('.btn-view').forEach(btn => {
+    btn.addEventListener('click', () => openModal(btn.dataset.uuid));
+  });
+}
+
+function cardHtml(p) {
+  const img = p.imgs && p.imgs[0]
+    ? `<img class="card-img" src="${imgUrl(p.imgs[0])}" alt="${escHtml(p.title)}" loading="lazy">`
+    : `<div class="card-img-placeholder">🖼</div>`;
+  const preview = (p.prompt_origin || '').slice(0, 80);
+  const author = p.author ? `<span class="card-author">by ${escHtml(p.author)}</span>` : '';
+  return `
+    <div class="card">
+      ${img}
+      <div class="card-body">
+        <div class="card-title">${escHtml(p.title || '未命名')}</div>
+        <div class="card-meta">${author}</div>
+        ${preview ? `<div class="card-prompt-preview">${escHtml(preview)}…</div>` : ''}
+        <button class="btn-view" data-uuid="${escAttr(p.uuid)}">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          查看提示词
+        </button>
+      </div>
+    </div>`;
+}
+
+// ── Modal ──
+function findProject(uuid) {
+  for (const cat of allData) {
+    const p = cat.projects.find(p => p.uuid === uuid);
+    if (p) return p;
+  }
+  return null;
+}
+
+async function openModal(uuid) {
+  const p = findProject(uuid);
+  if (!p) return;
+
+  document.getElementById('modalTitle').textContent = p.title || '未命名';
+  document.getElementById('modalAuthor').textContent = p.author ? `作者：${p.author}` : '';
+  document.getElementById('modalBody').innerHTML = '<p style="color:var(--text-sub);padding:8px 0">加载中…</p>';
+  document.getElementById('modalOverlay').classList.add('open');
+
+  let meta = {};
+  if (p.meta_path) {
+    try {
+      const res = await fetch(`meta?path=${encodeURIComponent(p.meta_path)}`);
+      if (res.ok) meta = await res.json();
+    } catch (e) {}
+  }
+
+  const prompt_origin = meta.prompt_origin || p.prompt_origin || '';
+  const prompt_cn     = meta.prompt_cn     || p.prompt_cn     || '';
+
+  let body = '';
+  if (p.imgs && p.imgs[0]) {
+    body += `<div class="modal-img-wrap"><img class="modal-img" src="${imgUrl(p.imgs[0])}" alt="预览图"></div>`;
+  }
+  if (prompt_origin) body += promptBlock('提示词原文', prompt_origin);
+  if (prompt_cn)     body += promptBlock('中文翻译', prompt_cn);
+  if (!prompt_origin && !prompt_cn) {
+    body += `<p class="prompt-empty">暂无提示词内容</p>`;
+  }
+  document.getElementById('modalBody').innerHTML = body;
+
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      navigator.clipboard.writeText(btn.dataset.text).then(() => {
+        btn.textContent = '已复制！';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = '复制'; btn.classList.remove('copied'); }, 1800);
+      });
+    });
+  });
+
+  document.querySelectorAll('.try-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const text = btn.dataset.text || '';
+      let target;
+      try {
+        target = new URL(TRY_PROMPT_BASE_URL);
+        target.searchParams.set('prompt', text);
+      } catch (err) {
+        showAlert('TRY_PROMPT_BASE_URL 无效，请在 index.html 中改为完整 URL（含 http:// 或 https://）', '无法打开外链');
+        return;
+      }
+      window.open(target.toString(), '_blank', 'noopener,noreferrer');
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = '已复制并打开';
+        btn.classList.add('done');
+        setTimeout(() => { btn.textContent = '复制并尝试'; btn.classList.remove('done'); }, 2200);
+      });
+    });
+  });
+}
+
+function promptBlock(label, text) {
+  const safeText = escHtml(text);
+  const copyData = escAttr(text);
+  return `
+    <div class="prompt-block">
+      <div class="prompt-block-header">
+        <div class="prompt-label">${label}</div>
+        <div class="prompt-block-actions">
+          <button type="button" class="copy-btn" data-text="${copyData}">复制</button>
+          <button type="button" class="try-btn" data-text="${copyData}">复制并尝试</button>
+        </div>
+      </div>
+      <div class="prompt-text">${safeText}</div>
+    </div>`;
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('modalOverlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (document.getElementById('alertDialogOverlay').classList.contains('open')) {
+    closeAlert();
+    return;
+  }
+  closeModal();
+});
+
+// ── Search（防抖 300ms）──
+let searchTimer = null;
+document.getElementById('searchInput').addEventListener('input', e => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    searchQuery = e.target.value;
+    renderMain();
+  }, 300);
+});
+
+// ── Utils ──
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+}
+
+// ── 移动端侧边栏 ──
+const sidebar   = document.getElementById('sidebar');
+const mask      = document.getElementById('sidebarMask');
+const menuBtn   = document.getElementById('menuBtn');
+
+function openSidebar()  { sidebar.classList.add('open'); mask.classList.add('open'); }
+function closeSidebar() { sidebar.classList.remove('open'); mask.classList.remove('open'); }
+
+menuBtn.addEventListener('click', openSidebar);
+mask.addEventListener('click', closeSidebar);
+
+// 点分类后自动关闭侧边栏（移动端）
+const origRenderSidebar = renderSidebar;
+renderSidebar = function() {
+  origRenderSidebar();
+  document.querySelectorAll('.cat-item').forEach(el => {
+    el.addEventListener('click', () => { if (window.innerWidth <= 768) closeSidebar(); });
+  });
+};
+
+function refreshFromUrl() {
+  if (!allData.length) return;
+  const want = parseCategoryFromUrl();
+  applyCategoryFromUrlString(want, !!want);
+  renderSidebar();
+  renderMain();
+  syncCategoryToUrl();
+}
+
+window.addEventListener('popstate', refreshFromUrl);
+window.addEventListener('hashchange', refreshFromUrl);
+
+// ── Boot ──
+loadData();
+</script>
+</body>
+</html>
