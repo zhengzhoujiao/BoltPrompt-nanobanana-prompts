@@ -501,7 +501,13 @@
   }
   .folder-name-dialog-overlay.open { display: flex; }
   .folder-name-dialog-bd {
-    padding: 0 22px 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
+    min-height: 128px;
+    padding: 16px 22px;
+    box-sizing: border-box;
   }
   .folder-name-input {
     width: 100%; padding: 10px 14px;
@@ -548,6 +554,21 @@
   .fav-picker-body {
     padding: 8px; max-height: 220px; overflow-y: auto;
   }
+  .fav-picker.custom-fav-panel .fav-picker-body.custom-fav-picker-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none; /* 覆盖上面 .fav-picker-body 的 220px，否则中间区被锁死，整卡到不了 70vh */
+    overflow-y: auto;
+    padding: 8px 8px 10px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .fav-picker.custom-fav-panel .custom-fav-picker-body::-webkit-scrollbar {
+    width: 6px;
+  }
+  .fav-picker.custom-fav-panel .custom-fav-picker-body::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+  }
   .fav-picker-body::-webkit-scrollbar { width: 4px; }
   .fav-picker-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
   .fav-picker-item {
@@ -589,6 +610,112 @@
   }
   .fav-picker-confirm:hover { opacity: .88; }
   .fav-picker-confirm:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* ── 新增自定义收藏 ── */
+  .fav-picker.custom-fav-panel {
+    max-width: 528px;
+    width: calc(100vw - 32px);
+    max-height: 70vh;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex-shrink: 1;
+    align-self: center;
+  }
+  .fav-picker.custom-fav-panel .fav-picker-hd {
+    flex-shrink: 0;
+  }
+  .fav-picker.custom-fav-panel .fav-picker-ft {
+    flex-shrink: 0;
+  }
+  .custom-fav-stack {
+    padding: 0 4px 4px;
+  }
+  .custom-fav-folder-section {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+  .custom-fav-section-label {
+    font-size: 12px; font-weight: 600; color: var(--text-sub);
+    margin: 0 4px 6px;
+  }
+  .custom-fav-folder-section .custom-fav-section-label {
+    margin-top: 0;
+  }
+  .custom-fav-folder-list {
+    margin-bottom: 6px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+  }
+  .custom-fav-folder-list .fav-picker-item {
+    border-radius: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .custom-fav-folder-list .fav-picker-item:last-child { border-bottom: none; }
+  .custom-fav-text-label {
+    display: block;
+    font-size: 12px; font-weight: 600; color: var(--text-sub);
+    margin: 10px 4px 6px;
+  }
+  .custom-fav-input, .custom-fav-textarea {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 14px;
+    color: var(--text);
+    font-family: inherit;
+  }
+  .custom-fav-input:focus, .custom-fav-textarea:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(79,110,247,.12);
+  }
+  .custom-fav-textarea { resize: vertical; min-height: 100px; }
+  #customFavOrigin.custom-fav-textarea {
+    min-height: 168px;
+  }
+  #customFavCn.custom-fav-textarea {
+    min-height: 120px;
+  }
+  .custom-fav-image-box {
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: var(--bg);
+    margin-bottom: 2px;
+  }
+  .custom-fav-image-actions {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px;
+  }
+  .custom-fav-image-btn {
+    padding: 7px 12px; border-radius: 8px; font-size: 13px; font-weight: 600;
+    border: 1px solid var(--border); background: var(--surface); color: var(--text);
+    cursor: pointer; transition: background .15s;
+  }
+  .custom-fav-image-btn:hover { background: var(--bg); }
+  .custom-fav-image-preview-wrap {
+    margin-top: 4px;
+    text-align: center;
+  }
+  .custom-fav-image-preview-wrap img {
+    max-width: 100%;
+    max-height: 180px;
+    border-radius: 8px;
+    object-fit: contain;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .fav-custom-badge {
+    display: inline-block;
+    font-size: 10px; font-weight: 600;
+    margin-left: 6px; padding: 1px 6px;
+    border-radius: 4px; vertical-align: middle;
+    background: var(--primary-light); color: var(--primary);
+  }
 
   /* ── Fav Edit Modal ── */
   .fav-edit-field { margin-bottom: 18px; }
@@ -784,6 +911,47 @@
   </div>
 </div>
 
+<!-- 新增自定义提示词到指定收藏夹 -->
+<div class="fav-picker-overlay" id="customFavOverlay" aria-hidden="true">
+  <div class="fav-picker custom-fav-panel" id="customFavPanel" role="dialog" aria-modal="true" aria-labelledby="customFavTitleHd">
+    <div class="fav-picker-hd" id="customFavTitleHd">新增自定义提示词</div>
+    <div class="fav-picker-body custom-fav-picker-body">
+      <div class="custom-fav-stack">
+        <label class="custom-fav-text-label" for="customFavTitle">标题 <span style="color:var(--danger);font-weight:600">*</span></label>
+        <input class="custom-fav-input" id="customFavTitle" type="text" required maxlength="200" placeholder="请输入标题" autocomplete="off" aria-required="true">
+        <label class="custom-fav-text-label">封面图 <span style="color:var(--danger);font-weight:600">*</span></label>
+        <div class="custom-fav-image-box">
+          <input type="file" id="customFavFileInput" class="visually-hidden" accept="image/*" tabindex="-1" aria-hidden="true">
+          <div class="custom-fav-image-actions">
+            <button type="button" class="custom-fav-image-btn" id="customFavPickBtn">选择图片</button>
+          </div>
+          <div class="custom-fav-image-preview-wrap" id="customFavPreviewOuter" hidden>
+            <img id="customFavPreview" alt="封面预览">
+          </div>
+        </div>
+        <label class="custom-fav-text-label" for="customFavAuthor">作者（可选）</label>
+        <input class="custom-fav-input" id="customFavAuthor" type="text" maxlength="120" placeholder="留空亦可" autocomplete="off">
+        <label class="custom-fav-text-label" for="customFavOrigin">提示词原文 <span style="color:var(--danger);font-weight:600">*</span></label>
+        <textarea class="custom-fav-textarea" id="customFavOrigin" rows="9" placeholder="请填写提示词原文" required aria-required="true"></textarea>
+        <label class="custom-fav-text-label" for="customFavCn">中文翻译（可选）</label>
+        <textarea class="custom-fav-textarea" id="customFavCn" rows="5" placeholder="可选"></textarea>
+        <div class="custom-fav-folder-section">
+          <div class="custom-fav-section-label">保存到收藏夹</div>
+          <div class="custom-fav-folder-list" id="customFavFolderBody"></div>
+          <div class="fav-picker-new" id="customFavNewFolder">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            新建收藏夹
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="fav-picker-ft">
+      <button type="button" class="fav-picker-cancel" id="customFavCancel">取消</button>
+      <button type="button" class="fav-picker-confirm" id="customFavConfirm" disabled>添加</button>
+    </div>
+  </div>
+</div>
+
 <!-- 收藏项编辑弹窗 -->
 <div class="modal-overlay" id="favEditOverlay">
   <div class="modal" id="favEditModal" style="max-width:700px">
@@ -822,41 +990,141 @@ const TRY_PROMPT_BASE_URL = 'https://bolt-series.com/boltPaint/#/tools/advanced-
 /** README / 外链分类直达：?cat=分类原始 name（与 JSON 中一致），或 hash 形如 #cat=… */
 const URL_CAT_PARAM = 'cat';
 
-// ── FavoritesStore ──
-const FAV_STORAGE_KEY = 'boltprompt_favorites';
+// ── FavoritesStore（IndexedDB；无 IndexedDB 或初始化失败时回退 localStorage） ──
+const FAV_LS_LEGACY_KEY = 'boltprompt_favorites';
+const FAV_IDB_NAME = 'boltprompt';
+const FAV_IDB_VER = 1;
+const FAV_IDB_STORE = 'favorites';
+const FAV_IDB_KEY = 'root';
 
 const FavoritesStore = (() => {
   let _data = { folders: [], items: [] };
+  /** true = 整块数据读写走 localStorage（与旧版兼容） */
+  let _useLocalStorageFallback = false;
+  let _idbPromise = null;
 
-  function _genId(prefix) {
-    return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  function _idbAvailable() {
+    return typeof indexedDB !== 'undefined' && indexedDB != null;
   }
 
-  function load() {
+  function _openIdb() {
+    if (_idbPromise) return _idbPromise;
+    _idbPromise = new Promise((resolve, reject) => {
+      const req = indexedDB.open(FAV_IDB_NAME, FAV_IDB_VER);
+      req.onerror = () => reject(req.error || new Error('IndexedDB open failed'));
+      req.onsuccess = () => resolve(req.result);
+      req.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(FAV_IDB_STORE)) {
+          db.createObjectStore(FAV_IDB_STORE);
+        }
+      };
+    });
+    return _idbPromise;
+  }
+
+  async function _idbRead() {
+    const db = await _openIdb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(FAV_IDB_STORE, 'readonly');
+      const req = tx.objectStore(FAV_IDB_STORE).get(FAV_IDB_KEY);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async function _idbWrite(data) {
+    const db = await _openIdb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(FAV_IDB_STORE, 'readwrite');
+      tx.objectStore(FAV_IDB_STORE).put(data, FAV_IDB_KEY);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error || new Error('IndexedDB write failed'));
+    });
+  }
+
+  function _loadFromLocalStorage() {
+    const raw = localStorage.getItem(FAV_LS_LEGACY_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    _data = {
+      folders: Array.isArray(parsed.folders) ? parsed.folders : [],
+      items: Array.isArray(parsed.items) ? parsed.items : []
+    };
+  }
+
+  function _ensureDefaultFolder() {
+    if (_data.folders.length === 0) {
+      _data.folders.push({ id: 'fav_default', name: '默认收藏夹', createdAt: Date.now() });
+      return true;
+    }
+    return false;
+  }
+
+  async function load() {
+    _data = { folders: [], items: [] };
+    _useLocalStorageFallback = !_idbAvailable();
+    if (_useLocalStorageFallback) {
+      try {
+        _loadFromLocalStorage();
+        _ensureDefaultFolder();
+      } catch (e) {
+        _data = { folders: [{ id: 'fav_default', name: '默认收藏夹', createdAt: Date.now() }], items: [] };
+      }
+      return;
+    }
+
     try {
-      const raw = localStorage.getItem(FAV_STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
+      const rec = await _idbRead().catch(() => undefined);
+      if (rec != null && typeof rec === 'object') {
         _data = {
-          folders: Array.isArray(parsed.folders) ? parsed.folders : [],
-          items: Array.isArray(parsed.items) ? parsed.items : []
+          folders: Array.isArray(rec.folders) ? rec.folders : [],
+          items: Array.isArray(rec.items) ? rec.items : []
         };
       }
-      // 确保默认收藏夹存在
-      if (_data.folders.length === 0) {
-        _data.folders.push({ id: 'fav_default', name: '默认收藏夹', createdAt: Date.now() });
+      // 仅当 IDB 尚无记录时尝试从旧版 localStorage 迁入
+      if (rec == null) {
+        try {
+          if (localStorage.getItem(FAV_LS_LEGACY_KEY)) {
+            _loadFromLocalStorage();
+            if (_data.folders.length || _data.items.length) {
+              await _idbWrite({ folders: _data.folders, items: _data.items });
+              localStorage.removeItem(FAV_LS_LEGACY_KEY);
+            }
+          }
+        } catch (e) {}
+      }
+      if (_ensureDefaultFolder()) {
+        await _idbWrite({ folders: _data.folders, items: _data.items });
       }
     } catch (e) {
-      _data = { folders: [{ id: 'fav_default', name: '默认收藏夹', createdAt: Date.now() }], items: [] };
+      _useLocalStorageFallback = true;
+      _idbPromise = null;
+      try {
+        _loadFromLocalStorage();
+        _ensureDefaultFolder();
+      } catch (e2) {
+        _data = { folders: [{ id: 'fav_default', name: '默认收藏夹', createdAt: Date.now() }], items: [] };
+      }
     }
   }
 
   function save() {
-    try {
-      localStorage.setItem(FAV_STORAGE_KEY, JSON.stringify(_data));
-    } catch (e) {
-      showAlert('收藏夹数据保存失败，可能是存储空间已满。', '保存失败');
+    if (_useLocalStorageFallback) {
+      try {
+        localStorage.setItem(FAV_LS_LEGACY_KEY, JSON.stringify(_data));
+      } catch (e) {
+        showAlert('收藏夹数据保存失败，可能是存储空间已满。', '保存失败');
+      }
+      return;
     }
+    void _idbWrite({ folders: _data.folders, items: _data.items }).catch(() => {
+      showAlert('收藏夹数据保存失败，可能是存储空间已满或浏览器限制 IndexedDB。', '保存失败');
+    });
+  }
+
+  function _genId(prefix) {
+    return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   }
 
   function getFolders() {
@@ -912,10 +1180,35 @@ const FavoritesStore = (() => {
     return item;
   }
 
+  /** 用户自建的提示词条目（不对应库内 uuid，sourceUuid 以 __custom__ 前缀标识） */
+  function addCustomItem(folderId, { title = '', prompt_origin = '', prompt_cn = '', author = '', coverImg = '' }) {
+    if (!folderId) return null;
+    const id = _genId('favitem');
+    const item = {
+      id,
+      folderId,
+      sourceUuid: `__custom__${id}`,
+      meta_path: '',
+      coverImg: coverImg || '',
+      title: (title || '').trim(),
+      prompt_origin: prompt_origin || '',
+      prompt_cn: prompt_cn || '',
+      author: (author || '').trim(),
+      note: '',
+      savedAt: Date.now(),
+      editedAt: Date.now(),
+      isModified: false
+    };
+    _data.items.push(item);
+    save();
+    return item;
+  }
+
   /** 从历史数据补全 meta_path、封面（正文仍在首次打开编辑或重新收藏时拉全量） */
   function backfillFromCatalog(findProjectFn) {
     let changed = false;
     for (const it of _data.items) {
+      if (it.sourceUuid && String(it.sourceUuid).startsWith('__custom__')) continue;
       const p = findProjectFn(it.sourceUuid);
       if (!p) continue;
       if (!it.meta_path && p.meta_path) { it.meta_path = p.meta_path; changed = true; }
@@ -993,7 +1286,7 @@ const FavoritesStore = (() => {
 
   return {
     load, save, getFolders, getItems, getItemBySource, getItemById,
-    addItemFromProject, backfillFromCatalog,
+    addItemFromProject, addCustomItem, backfillFromCatalog,
     updateItem, removeItem, createFolder, renameFolder, deleteFolder, exportJSON, importJSON, getTotalCount
   };
 })();
@@ -1147,7 +1440,7 @@ document.getElementById('folderNameDialogOverlay').addEventListener('click', e =
 
 // ── Fetch data ──
 async function loadData() {
-  FavoritesStore.load();
+  await FavoritesStore.load();
   const urlCatWant = parseCategoryFromUrl();
   const res = await fetch('api/data');
   allData = await res.json();
@@ -1161,6 +1454,14 @@ async function loadData() {
 // ── Image URL helper ──
 function imgUrl(localPath) {
   return `image?path=${encodeURIComponent(localPath)}`;
+}
+
+/** 收藏卡片封面：相对路径走 image 接口，data: Base64 直接使用 */
+function favCoverSrc(cover) {
+  if (!cover || typeof cover !== 'string') return '';
+  const t = cover.trim();
+  if (t.startsWith('data:')) return t;
+  return imgUrl(t);
 }
 
 // ── Sidebar ──
@@ -1232,6 +1533,11 @@ function renderSidebar() {
   if (importBtn) {
     importBtn.addEventListener('click', () => document.getElementById('favImportInput').click());
   }
+
+  const addCustomBtn = document.getElementById('favAddCustomBtn');
+  if (addCustomBtn) {
+    addCustomBtn.addEventListener('click', () => openCustomFavDialog());
+  }
 }
 
 function renderSidebarFavSection() {
@@ -1245,6 +1551,9 @@ function renderSidebarFavSection() {
       <div class="sidebar-label-row">
         <span class="sidebar-label">我的收藏</span>
         <div class="fav-tools">
+          <button class="fav-tool-btn" id="favAddCustomBtn" title="新增自定义提示词">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          </button>
           <button class="fav-tool-btn" id="favImportBtn" title="导入收藏夹">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           </button>
@@ -1448,7 +1757,7 @@ function renderFavoritesMain(folderId) {
           <path d="M17 3H7a2 2 0 0 0-2 2v16l7-3 7 3V5a2 2 0 0 0-2-2z"/>
         </svg>
         <p>还没有收藏的提示词</p>
-        <p class="fav-empty-sub">浏览提示词库，点击卡片上的书签图标即可收藏</p>
+        <p class="fav-empty-sub">浏览提示词库点击书签收藏，或使用侧栏「新增」写入自定义提示词</p>
       </div>`;
     return;
   }
@@ -1496,12 +1805,15 @@ function renderFavoritesMain(folderId) {
 function favCardHtml(item) {
   const p = findProject(item.sourceUuid);
   const imgRel = item.coverImg || (p && p.imgs && p.imgs[0]) || '';
-  const imgTop = imgRel
-    ? `<img class="card-img" src="${imgUrl(imgRel)}" alt="${escHtml(item.title)}" loading="lazy">`
+  const imgSrc = favCoverSrc(imgRel);
+  const imgTop = imgSrc
+    ? `<img class="card-img" src="${escAttr(imgSrc)}" alt="${escHtml(item.title)}" loading="lazy">`
     : `<div class="card-img-placeholder" style="font-size:32px">🔖</div>`;
-  const preview = (item.prompt_origin || '').slice(0, 80);
+  const preview = ((item.prompt_origin || item.prompt_cn || '')).slice(0, 80);
   const author = item.author ? `<span class="card-author">by ${escHtml(item.author)}</span>` : '';
   const editedBadge = item.isModified ? `<span class="fav-edited-badge">已编辑</span>` : '';
+  const customBadge = (item.sourceUuid && String(item.sourceUuid).startsWith('__custom__'))
+    ? '<span class="fav-custom-badge">自定义</span>' : '';
   return `
     <div class="card">
       ${imgTop}
@@ -1509,7 +1821,7 @@ function favCardHtml(item) {
         <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H7a2 2 0 0 0-2 2v16l7-3 7 3V5a2 2 0 0 0-2-2z"/></svg>
       </button>
       <div class="card-body">
-        <div class="card-title">${escHtml(item.title || '未命名')}${editedBadge}</div>
+        <div class="card-title">${escHtml(item.title || '未命名')}${editedBadge}${customBadge}</div>
         <div class="card-meta">${author}</div>
         ${preview ? `<div class="card-prompt-preview">${escHtml(preview)}…</div>` : ''}
         <button class="btn-fav-view" data-favid="${escAttr(item.id)}">
@@ -1569,6 +1881,15 @@ function findProject(uuid) {
 
 /** 与详情弹窗一致：合并 meta.json 与列表项，得到「原始」提示词与标题 */
 async function getCanonicalSourceForFavItem(item) {
+  if (item && item.sourceUuid && String(item.sourceUuid).startsWith('__custom__')) {
+    return {
+      title: item.title || '',
+      prompt_origin: item.prompt_origin || '',
+      prompt_cn: item.prompt_cn || '',
+      author: item.author || '',
+      meta_path: ''
+    };
+  }
   const p = item ? findProject(item.sourceUuid) : null;
   const path = ((item && item.meta_path) || (p && p.meta_path) || '').trim();
   let meta = {};
@@ -1687,6 +2008,10 @@ document.addEventListener('keydown', e => {
     closeFavPicker();
     return;
   }
+  if (document.getElementById('customFavOverlay').classList.contains('open')) {
+    closeCustomFavDialog();
+    return;
+  }
   if (document.getElementById('favEditOverlay').classList.contains('open')) {
     closeFavEditModal();
     return;
@@ -1801,6 +2126,188 @@ document.getElementById('favPickerConfirm').addEventListener('click', async () =
   if (activeCat.startsWith('__fav__')) renderMain();
 });
 
+// ── 新增自定义提示词（指定收藏夹） ──
+let _customFavSelectedFolderId = null;
+let _customFavImageDataUrl = '';
+const CUSTOM_FAV_MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+function resetCustomFavImageUI() {
+  _customFavImageDataUrl = '';
+  const fin = document.getElementById('customFavFileInput');
+  if (fin) fin.value = '';
+  const img = document.getElementById('customFavPreview');
+  if (img) {
+    img.removeAttribute('src');
+    img.alt = '封面预览';
+  }
+  const outer = document.getElementById('customFavPreviewOuter');
+  if (outer) outer.hidden = true;
+}
+
+function getDefaultCustomFavFolderId() {
+  if (activeCat.startsWith('__fav__') && activeCat !== '__fav__all') {
+    return activeCat.slice(7);
+  }
+  const folders = FavoritesStore.getFolders();
+  return folders[0]?.id || null;
+}
+
+function openCustomFavDialog() {
+  _customFavSelectedFolderId = getDefaultCustomFavFolderId();
+  resetCustomFavImageUI();
+  document.getElementById('customFavTitle').value = '';
+  document.getElementById('customFavAuthor').value = '';
+  document.getElementById('customFavOrigin').value = '';
+  document.getElementById('customFavCn').value = '';
+  renderCustomFavFolderBody();
+  const ov = document.getElementById('customFavOverlay');
+  ov.classList.add('open');
+  ov.setAttribute('aria-hidden', 'false');
+  updateCustomFavConfirmBtn();
+  requestAnimationFrame(() => {
+    const el = document.getElementById('customFavTitle');
+    if (el) el.focus();
+  });
+}
+
+function closeCustomFavDialog() {
+  document.getElementById('customFavOverlay').classList.remove('open');
+  document.getElementById('customFavOverlay').setAttribute('aria-hidden', 'true');
+  _customFavSelectedFolderId = null;
+  resetCustomFavImageUI();
+}
+
+function renderCustomFavFolderBody() {
+  const folders = FavoritesStore.getFolders();
+  const wrap = document.getElementById('customFavFolderBody');
+  let html = '';
+  folders.forEach(folder => {
+    const count = FavoritesStore.getItems(folder.id).length;
+    const isSelected = folder.id === _customFavSelectedFolderId;
+    html += `
+      <div class="fav-picker-item ${isSelected ? 'selected' : ''}" data-folderid="${escAttr(folder.id)}">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        ${escHtml(folder.name)}
+        <span class="fav-picker-item-count">${count}</span>
+      </div>`;
+  });
+  wrap.innerHTML = html;
+  wrap.querySelectorAll('.fav-picker-item').forEach(el => {
+    el.addEventListener('click', () => {
+      _customFavSelectedFolderId = el.dataset.folderid;
+      wrap.querySelectorAll('.fav-picker-item').forEach(x => x.classList.remove('selected'));
+      el.classList.add('selected');
+      updateCustomFavConfirmBtn();
+    });
+  });
+  document.getElementById('customFavNewFolder').onclick = () => {
+    showFolderNameDialog({
+      title: '新建收藏夹',
+      placeholder: '请输入新收藏夹名称',
+      onConfirm(trimmed) {
+        const folder = FavoritesStore.createFolder(trimmed);
+        _customFavSelectedFolderId = folder.id;
+        renderCustomFavFolderBody();
+        updateCustomFavConfirmBtn();
+        renderSidebarFavSectionOnly();
+      }
+    });
+  };
+}
+
+function updateCustomFavConfirmBtn() {
+  const btn = document.getElementById('customFavConfirm');
+  const folderOk = !!_customFavSelectedFolderId;
+  const titleOk = !!(document.getElementById('customFavTitle').value || '').trim();
+  const originOk = !!(document.getElementById('customFavOrigin').value || '').trim();
+  const imgOk = !!(_customFavImageDataUrl || '').trim();
+  btn.disabled = !(folderOk && titleOk && originOk && imgOk);
+}
+
+document.getElementById('customFavCancel').addEventListener('click', closeCustomFavDialog);
+document.getElementById('customFavOverlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeCustomFavDialog();
+});
+document.getElementById('customFavConfirm').addEventListener('click', () => {
+  if (!_customFavSelectedFolderId) return;
+  const title = document.getElementById('customFavTitle').value.trim();
+  const author = document.getElementById('customFavAuthor').value.trim();
+  const prompt_origin = document.getElementById('customFavOrigin').value;
+  const prompt_cn = document.getElementById('customFavCn').value;
+  const oTrim = prompt_origin.trim();
+  if (!title) {
+    showAlert('请填写提示词标题。', '无法添加');
+    return;
+  }
+  if (!oTrim) {
+    showAlert('请填写提示词原文。', '无法添加');
+    return;
+  }
+  if (!_customFavImageDataUrl || !_customFavImageDataUrl.trim()) {
+    showAlert('请上传封面图片。', '无法添加');
+    return;
+  }
+  const folderId = _customFavSelectedFolderId;
+  FavoritesStore.addCustomItem(folderId, {
+    title,
+    author,
+    prompt_origin,
+    prompt_cn,
+    coverImg: _customFavImageDataUrl
+  });
+  activeCat = '__fav__' + folderId;
+  closeCustomFavDialog();
+  renderSidebar();
+  renderMain();
+  showAlert('已保存到当前所选收藏夹。', '完成');
+});
+
+['customFavTitle', 'customFavOrigin', 'customFavCn'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', updateCustomFavConfirmBtn);
+});
+
+document.getElementById('customFavPickBtn').addEventListener('click', () => {
+  document.getElementById('customFavFileInput').click();
+});
+document.getElementById('customFavFileInput').addEventListener('change', function() {
+  const f = this.files && this.files[0];
+  if (!f) {
+    updateCustomFavConfirmBtn();
+    return;
+  }
+  if (!/^image\//.test(f.type)) {
+    showAlert('请选择常见图片格式（如 PNG、JPEG、WebP）。', '格式错误');
+    this.value = '';
+    updateCustomFavConfirmBtn();
+    return;
+  }
+  if (f.size > CUSTOM_FAV_MAX_IMAGE_BYTES) {
+    showAlert('图片文件请小于 5MB。', '文件过大');
+    this.value = '';
+    updateCustomFavConfirmBtn();
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const url = reader.result;
+    if (typeof url !== 'string') return;
+    _customFavImageDataUrl = url;
+    const img = document.getElementById('customFavPreview');
+    const outer = document.getElementById('customFavPreviewOuter');
+    img.src = url;
+    img.alt = '封面预览';
+    outer.hidden = false;
+    updateCustomFavConfirmBtn();
+  };
+  reader.onerror = () => {
+    showAlert('读取图片失败，请重试。', '错误');
+    this.value = '';
+    updateCustomFavConfirmBtn();
+  };
+  reader.readAsDataURL(f);
+});
+
 // 只刷新侧边栏收藏夹部分（不重绘整个侧边栏）
 function renderSidebarFavSectionOnly() {
   const sidebar = document.getElementById('sidebar');
@@ -1839,6 +2346,8 @@ function renderSidebarFavSectionOnly() {
   if (exportBtn) exportBtn.addEventListener('click', doExportFavorites);
   const importBtn = document.getElementById('favImportBtn');
   if (importBtn) importBtn.addEventListener('click', () => document.getElementById('favImportInput').click());
+  const addCustomBtn = document.getElementById('favAddCustomBtn');
+  if (addCustomBtn) addCustomBtn.addEventListener('click', () => openCustomFavDialog());
 }
 
 // ── Fav Edit Modal ──
@@ -1884,11 +2393,20 @@ async function openFavEditModal(favItemId) {
   document.getElementById('favEditModalTitle').textContent = item.title || '未命名';
 
   const body = document.getElementById('favEditBody');
+  const coverBlock = (item.coverImg && String(item.coverImg).startsWith('data:'))
+    ? `<div class="fav-edit-field">
+      <label class="fav-edit-label">封面</label>
+      <div style="border-radius:10px;overflow:hidden;border:1px solid var(--border);background:var(--bg);text-align:center;padding:8px">
+        <img src="${escAttr(item.coverImg)}" alt="" style="max-width:100%;max-height:220px;object-fit:contain;vertical-align:middle">
+      </div>
+    </div>`
+    : '';
   body.innerHTML = `
     <div class="fav-edit-field">
       <label class="fav-edit-label">标题</label>
       <input class="fav-edit-input" id="favEditTitle" type="text" value="${escAttr(item.title || '')}" placeholder="提示词标题">
     </div>
+    ${coverBlock}
     <div class="fav-edit-field">
       <div class="prompt-block-header" style="margin-bottom:8px">
         <div class="prompt-label">提示词原文</div>
